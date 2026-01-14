@@ -114,7 +114,7 @@ export function Legend() {
       minWidth: "220px",
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-        <h4 style={{ fontSize: "13px", fontWeight: 600, margin: 0 }}>Légende</h4>
+        <h4 style={{ fontSize: "13px", fontWeight: 600, margin: 0 }}></h4>
         <button
           onClick={() => setLegendVisible(false)}
           title="Masquer la légende"
@@ -174,7 +174,7 @@ export function Legend() {
             <div style={{
               width: "20px",
               height: "16px",
-              background: "rgba(0, 100, 200, 0.6)",
+              background: "rgba(200, 50, 50, 0.7)",
               borderRadius: "2px",
             }} />
             <span style={{ fontSize: "10px", color: "#666" }}>
