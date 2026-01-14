@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 50">
+  <!-- IPSL Logo - Institut Pierre-Simon Laplace -->
+  <rect x="5" y="5" width="40" height="40" rx="3" fill="#1E3A5F"/>
+  <text x="25" y="32" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white" text-anchor="middle">IPSL</text>
+  <text x="55" y="20" font-family="Arial, sans-serif" font-size="8" fill="#1E3A5F">Institut</text>
+  <text x="55" y="30" font-family="Arial, sans-serif" font-size="8" fill="#1E3A5F">Pierre-Simon</text>
+  <text x="55" y="40" font-family="Arial, sans-serif" font-size="8" fill="#1E3A5F">Laplace</text>
+</svg>

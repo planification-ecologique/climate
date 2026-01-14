@@ -1,0 +1,395 @@
+/* Impact Climat - Global Styles */
+
+/* Keep Tailwind base if needed but DSFR takes precedence */
+@tailwind utilities;
+
+/* Ensure full height */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+/* Custom CSS Variables for climate visualization */
+:root {
+  --impact-primary: #000091;
+  --impact-secondary: #3a3a3a;
+  --impact-accent: #e1000f;
+  
+  /* Climate color scales */
+  --temp-cold: #313695;
+  --temp-cool: #4575b4;
+  --temp-neutral: #fee090;
+  --temp-warm: #f46d43;
+  --temp-hot: #a50026;
+  
+  --precip-dry: #ffffd9;
+  --precip-wet: #081d58;
+  
+  /* Map controls */
+  --map-control-bg: rgba(255, 255, 255, 0.95);
+  --map-control-border: #e5e5e5;
+  --map-control-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Dark mode adjustments */
+[data-fr-scheme="dark"] {
+  --map-control-bg: rgba(30, 30, 30, 0.95);
+  --map-control-border: #3a3a3a;
+}
+
+/* Full height app layout */
+.fr-app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Map container styles */
+.map-container {
+  position: relative;
+  flex: 1;
+  min-height: 500px;
+}
+
+.map-container.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  min-height: 100vh;
+}
+
+/* Map sidebar */
+.map-sidebar {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  width: 360px;
+  max-height: calc(100% - 2rem);
+  background: var(--map-control-bg);
+  border-radius: 8px;
+  box-shadow: var(--map-control-shadow);
+  overflow: hidden;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-sidebar.collapsed {
+  width: auto;
+}
+
+.map-sidebar-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--map-control-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--background-alt-grey);
+}
+
+.map-sidebar-content {
+  padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Map controls (right side) */
+.map-controls {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 10;
+}
+
+.map-control-button {
+  width: 40px;
+  height: 40px;
+  background: var(--map-control-bg);
+  border: 1px solid var(--map-control-border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--map-control-shadow);
+  transition: background 0.2s;
+}
+
+.map-control-button:hover {
+  background: var(--background-alt-grey);
+}
+
+/* Legend panel */
+.map-legend {
+  position: absolute;
+  bottom: 2rem;
+  right: 1rem;
+  background: var(--map-control-bg);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: var(--map-control-shadow);
+  z-index: 10;
+  min-width: 200px;
+}
+
+.legend-gradient {
+  height: 20px;
+  border-radius: 4px;
+  margin: 0.5rem 0;
+}
+
+.legend-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-mention-grey);
+}
+
+/* Selector cards */
+.selector-card {
+  background: var(--background-default-grey);
+  border: 1px solid var(--border-default-grey);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.selector-card h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--text-title-grey);
+}
+
+/* Scenario buttons */
+.scenario-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.scenario-button {
+  flex: 1;
+  padding: 0.5rem;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  background: var(--background-alt-grey);
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.scenario-button.active {
+  border-color: var(--impact-primary);
+  background: var(--background-active-blue-france);
+}
+
+.scenario-button.rcp26:hover,
+.scenario-button.rcp26.active {
+  border-color: #2166ac;
+}
+
+.scenario-button.rcp45:hover,
+.scenario-button.rcp45.active {
+  border-color: #fdae61;
+}
+
+.scenario-button.rcp85:hover,
+.scenario-button.rcp85.active {
+  border-color: #d73027;
+}
+
+/* Period selector */
+.period-slider {
+  padding: 0.5rem 0;
+}
+
+.period-marks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+
+.period-mark {
+  font-size: 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.period-mark:hover {
+  background: var(--background-alt-grey);
+}
+
+.period-mark.active {
+  background: var(--background-active-blue-france);
+  font-weight: 600;
+}
+
+/* Indicator grid */
+.indicator-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.indicator-chip {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-default-grey);
+  border-radius: 4px;
+  background: var(--background-default-grey);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.indicator-chip:hover {
+  border-color: var(--impact-primary);
+}
+
+.indicator-chip.active {
+  background: var(--background-active-blue-france);
+  border-color: var(--impact-primary);
+  font-weight: 500;
+}
+
+/* Location info panel */
+.location-panel {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--map-control-bg);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  box-shadow: var(--map-control-shadow);
+  z-index: 10;
+  min-width: 280px;
+}
+
+.location-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.location-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--impact-primary);
+}
+
+.location-meta {
+  font-size: 0.875rem;
+  color: var(--text-mention-grey);
+}
+
+/* Layer control panel */
+.layer-panel {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-default-grey);
+}
+
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.layer-item label {
+  flex: 1;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.layer-opacity {
+  width: 60px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .map-sidebar {
+    width: calc(100% - 2rem);
+    max-height: 40vh;
+    bottom: 1rem;
+    top: auto;
+  }
+  
+  .map-legend {
+    bottom: auto;
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    min-width: auto;
+  }
+  
+  .indicator-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* MapLibre overrides */
+.maplibregl-map {
+  font-family: inherit;
+}
+
+.maplibregl-ctrl-group {
+  background: var(--map-control-bg) !important;
+  border-radius: 4px !important;
+  box-shadow: var(--map-control-shadow) !important;
+}
+
+.maplibregl-ctrl-group button {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+.maplibregl-popup-content {
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: var(--map-control-shadow);
+}
+
+/* Loading states */
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-default-grey);
+  border-top-color: var(--impact-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
