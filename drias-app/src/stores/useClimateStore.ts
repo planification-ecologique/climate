@@ -40,8 +40,8 @@ const DEFAULT_VIEWPORT: MapViewport = {
   zoom: 5.5,
 };
 
-// Default active layers - CMIP6 temperature projection (2050) + current flood zones
-const DEFAULT_ACTIVE_LAYERS: string[] = ['cmip6-tas-ssp585-2050', 'flood-zones'];
+// Default active layers - CMIP6 temperature projection (2050) + admin boundaries
+const DEFAULT_ACTIVE_LAYERS: string[] = ['cmip6-tas-ssp585-2050', 'admin-departments', 'admin-regions', 'admin-country'];
 
 // Initialize layer opacity from layer configs
 const initializeLayerOpacity = (): Record<string, number> => {

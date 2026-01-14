@@ -5,7 +5,6 @@ import {
   getFranceClimateSummary, 
   SSP_SCENARIOS, 
   PROJECTION_PERIODS,
-  CLIMATE_VARIABLES,
   type SSPScenario,
   type ProjectionPeriod 
 } from "@/lib/climate/cckp-api";
@@ -106,7 +105,7 @@ export function ClimateProjections() {
           borderLeft: "3px solid #ffc107"
         }}>
           <h4 style={{ fontSize: "13px", fontWeight: 600, marginBottom: "8px" }}>
-            ⚠️ Impacts à l'horizon 2100 (SSP5-8.5)
+            ⚠️ Impacts à l&apos;horizon 2100 (SSP5-8.5)
           </h4>
           <ul style={{ fontSize: "12px", margin: 0, paddingLeft: "20px" }}>
             <li><strong>+35 nuits tropicales</strong> (Tmin &gt; 20°C) par an</li>

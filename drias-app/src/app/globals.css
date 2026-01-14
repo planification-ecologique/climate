@@ -50,6 +50,14 @@ main {
   flex-direction: column;
 }
 
+/* DSFR Header and Footer - Full Width Overrides */
+/* The DSFR default is max-width: 78rem - we override to full width */
+.fr-container,
+.fr-container--fluid,
+[class*="fr-container"] {
+  max-width: 100% !important;
+}
+
 /* Map container styles */
 .map-container {
   position: relative;

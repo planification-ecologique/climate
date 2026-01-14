@@ -93,19 +93,7 @@ export const FLOOD_RISK_LAYERS: WMSLayerConfig[] = [
 
 // Reference and administrative layers
 export const REFERENCE_WMS_LAYERS: WMSLayerConfig[] = [
-  {
-    id: 'admin-departments',
-    name: 'Départements',
-    url: 'https://wxs.ign.fr/administratif/geoportail/r/wms',
-    layers: 'ADMINEXPRESS-COG.LATEST:departement',
-    version: '1.3.0',
-    format: 'image/png',
-    transparent: true,
-    attribution: '© IGN',
-    opacity: 0.5,
-    visible: false,
-    category: 'reference',
-  },
+
 ];
 
 // World Bank Climate Change Knowledge Portal - CMIP6 Climate Projections

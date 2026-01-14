@@ -49,7 +49,7 @@ export function LayerControl() {
   );
 
   return (
-    <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #e5e5e5" }}>
+    <div style={{}}>
       <h3 style={{ fontSize: "14px", fontWeight: 600, marginBottom: "12px" }}>Couches de données</h3>
       
       {/* CMIP6 Temperature Projections */}
@@ -121,6 +121,57 @@ export function LayerControl() {
           {referenceLayers.map(renderLayerItem)}
         </Accordion>
       )}
+
+      {/* Administrative boundaries */}
+      <Accordion
+        label="🏛️ Limites administratives"
+        defaultExpanded={true}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 0" }}>
+            <Checkbox
+              options={[
+                {
+                  label: "Départements",
+                  nativeInputProps: {
+                    checked: activeLayers.includes('admin-departments'),
+                    onChange: () => toggleLayer('admin-departments'),
+                  },
+                },
+              ]}
+              small
+            />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 0" }}>
+            <Checkbox
+              options={[
+                {
+                  label: "Régions",
+                  nativeInputProps: {
+                    checked: activeLayers.includes('admin-regions'),
+                    onChange: () => toggleLayer('admin-regions'),
+                  },
+                },
+              ]}
+              small
+            />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 0" }}>
+            <Checkbox
+              options={[
+                {
+                  label: "Frontière nationale",
+                  nativeInputProps: {
+                    checked: activeLayers.includes('admin-country'),
+                    onChange: () => toggleLayer('admin-country'),
+                  },
+                },
+              ]}
+              small
+            />
+          </div>
+        </div>
+      </Accordion>
 
       <div style={{ 
         fontSize: "10px", 

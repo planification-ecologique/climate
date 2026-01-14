@@ -2,7 +2,6 @@
 
 import { useClimateStore } from "@/stores/useClimateStore";
 import { LayerControl } from "@/components/data/LayerControl";
-import { ClimateProjections } from "@/components/data/ClimateProjections";
 
 export function MapSidebar() {
   const { sidebarOpen, setSidebarOpen } = useClimateStore();
@@ -85,9 +84,6 @@ export function MapSidebar() {
       </div>
       
       <div style={{ padding: "16px", overflowY: "auto", flex: 1 }}>
-        {/* Climate projections from World Bank CCKP */}
-        <ClimateProjections />
-        
         {/* Map layer controls */}
         <LayerControl />
       </div>

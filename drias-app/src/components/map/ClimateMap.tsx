@@ -254,14 +254,10 @@ export function ClimateMap({ className }: ClimateMapProps) {
         <NavigationControl position="top-right" />
         <ScaleControl position="bottom-left" />
 
-        {/* WMS Layers - only render when map is loaded */}
+        {/* WMS Layers - always render all sources to maintain z-order, control visibility via opacity */}
         {mapLoaded && allLayers.map((layer) => {
           const isActive = activeLayers.includes(layer.id);
-          if (!isActive) return null;
-
-          const opacity = layerOpacity[layer.id] ?? layer.opacity ?? 0.7;
-
-          console.log(`Rendering layer: ${layer.id}, opacity: ${opacity}`);
+          const opacity = isActive ? (layerOpacity[layer.id] ?? layer.opacity ?? 0.7) : 0;
 
           return (
             <Source
@@ -282,48 +278,69 @@ export function ClimateMap({ className }: ClimateMapProps) {
           );
         })}
 
-        {/* Administrative boundaries - rendered on top of climate layers */}
+        {/* Administrative boundaries - always rendered on top, visibility controlled via store */}
         
-        {/* Departments boundaries (thin lines) */}
-        {departmentsGeoJson && (
-          <Source id="departments" type="geojson" data={departmentsGeoJson}>
+        {/* Departments boundaries (thin dark lines) */}
+        {mapLoaded && departmentsGeoJson && (
+          <Source id="admin-departments" type="geojson" data={departmentsGeoJson}>
             <Layer
-              id="departments-line"
-              type="line"
-              paint={{
-                "line-color": "#333333",
-                "line-width": 0.5,
-                "line-opacity": 0.6,
-              }}
-            />
-          </Source>
-        )}
-
-        {/* Regions boundaries (medium lines) */}
-        {regionsGeoJson && (
-          <Source id="regions" type="geojson" data={regionsGeoJson}>
-            <Layer
-              id="regions-line"
-              type="line"
-              paint={{
-                "line-color": "#1a1a1a",
-                "line-width": 1.5,
-                "line-opacity": 0.8,
-              }}
-            />
-          </Source>
-        )}
-
-        {/* France country border (thick line) */}
-        {countryGeoJson && (
-          <Source id="country" type="geojson" data={countryGeoJson}>
-            <Layer
-              id="country-line"
+              id="admin-departments-line"
               type="line"
               paint={{
                 "line-color": "#000000",
-                "line-width": 2.5,
-                "line-opacity": 1,
+                "line-width": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  4, 0.3,
+                  8, 0.8,
+                  12, 1.2
+                ],
+                "line-opacity": activeLayers.includes('admin-departments') ? 0.5 : 0,
+              }}
+            />
+          </Source>
+        )}
+
+        {/* Regions boundaries (medium dark lines) */}
+        {mapLoaded && regionsGeoJson && (
+          <Source id="admin-regions" type="geojson" data={regionsGeoJson}>
+            <Layer
+              id="admin-regions-line"
+              type="line"
+              paint={{
+                "line-color": "#000000",
+                "line-width": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  4, 1,
+                  8, 1.5,
+                  12, 2
+                ],
+                "line-opacity": activeLayers.includes('admin-regions') ? 0.7 : 0,
+              }}
+            />
+          </Source>
+        )}
+
+        {/* France country border (thick dark line - always on top) */}
+        {mapLoaded && countryGeoJson && (
+          <Source id="admin-country" type="geojson" data={countryGeoJson}>
+            <Layer
+              id="admin-country-line"
+              type="line"
+              paint={{
+                "line-color": "#000000",
+                "line-width": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  4, 2,
+                  8, 3,
+                  12, 4
+                ],
+                "line-opacity": activeLayers.includes('admin-country') ? 1 : 0,
               }}
             />
           </Source>
