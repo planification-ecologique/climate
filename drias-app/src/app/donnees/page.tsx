@@ -32,7 +32,7 @@ export default function DonneesPage() {
       <div className="fr-mt-4w">
         <Button
           linkProps={{
-            href: "/decouverte",
+            href: "/visualiser",
           }}
           iconId="fr-icon-earth-line"
         >

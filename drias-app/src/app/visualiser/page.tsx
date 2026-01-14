@@ -44,7 +44,7 @@ const ClimateMap = dynamic(
   }
 );
 
-export default function DecouvertePage() {
+export default function VisualiserPage() {
   return (
     <div 
       style={{ 

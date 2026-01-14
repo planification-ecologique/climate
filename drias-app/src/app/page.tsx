@@ -21,7 +21,7 @@ export default function HomePage() {
             <div className="fr-btns-group fr-btns-group--inline-lg fr-mt-4w">
               <Button
                 linkProps={{
-                  href: "/decouverte",
+                  href: "/visualiser",
                 }}
                 iconId="fr-icon-earth-line"
               >
@@ -84,7 +84,7 @@ export default function HomePage() {
               desc="Explorez visuellement les projections climatiques sur une carte interactive. Sélectionnez les scénarios, horizons temporels et indicateurs climatiques."
               enlargeLink
               linkProps={{
-                href: "/decouverte",
+                href: "/visualiser",
               }}
               imageUrl="/images/card-decouverte.svg"
               imageAlt="Carte de France avec visualisation des températures"

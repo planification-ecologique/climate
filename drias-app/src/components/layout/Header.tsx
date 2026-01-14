@@ -48,9 +48,9 @@ export function Header() {
         {
           text: "Visualiser",
           linkProps: {
-            href: "/decouverte",
+            href: "/visualiser",
           },
-          isActive: pathname.startsWith("/decouverte"),
+          isActive: pathname.startsWith("/visualiser"),
         },
         {
           text: "Données & Produits",
