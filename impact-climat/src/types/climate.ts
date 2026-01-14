@@ -76,12 +76,14 @@ export interface WMSLayerConfig {
   attribution: string;
   opacity?: number;
   visible?: boolean;
-  category: 'climate' | 'risk' | 'reference';
+  category: 'climate' | 'risk' | 'reference' | 'environment' | 'exposure';
   // Additional WMS parameters for THREDDS/CMIP6 servers
   styles?: string;
   colorScaleRange?: [number, number];
   time?: string;
   crs?: string; // Override CRS (default EPSG:3857, some servers need EPSG:4326)
+  apiKey?: string; // API key for authentication (e.g., IGN Geoplateforme)
+  needsProxy?: boolean; // Force use of CORS proxy even if not auto-detected
 }
 
 // World Bank Climate Data configuration
@@ -90,4 +92,21 @@ export interface CMIP6LayerConfig {
   scenario: Scenario;
   period: TimePeriod;
   percentile: 'p10' | 'p50' | 'p90'; // 10th, median, 90th percentile
+}
+
+// WMTS Layer configuration (for pre-rendered tile services like IGN)
+export interface WMTSLayerConfig {
+  id: string;
+  name: string;
+  url: string; // Base WMTS service URL (e.g., https://data.geopf.fr/wmts)
+  layer: string; // WMTS layer identifier
+  style: string; // WMTS style (usually 'normal')
+  tileMatrixSet: string; // TileMatrixSet identifier (e.g., PM_6_16 for Web Mercator)
+  format: string; // Tile format (e.g., 'image/png')
+  attribution: string;
+  opacity?: number;
+  visible?: boolean;
+  category: 'climate' | 'risk' | 'reference' | 'environment' | 'exposure';
+  minZoom?: number; // Minimum zoom level
+  maxZoom?: number; // Maximum zoom level
 }

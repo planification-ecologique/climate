@@ -5,7 +5,12 @@ const ALLOWED_WMS_HOSTS = [
   'climatedata.worldbank.org',
   'mapsref.brgm.fr',
   'georisques.gouv.fr',
+  'www.georisques.gouv.fr',
   'wxs.ign.fr',
+  'data.geopf.fr',
+  'geoservices.brgm.fr',
+  'services.sandre.eaufrance.fr',
+  'ws.carmencarto.fr',
 ];
 
 /**
@@ -37,6 +42,11 @@ function transformBbox3857to4326(bbox3857: string): string {
  * that don't support Web Mercator.
  * 
  * Usage: /api/wms?baseUrl=<encoded-base-url>&bbox=<bbox-3857>&reproject=true
+ * 
+ * Parameters:
+ * - baseUrl: URL-encoded WMS base URL with all params except bbox
+ * - bbox: Bounding box in EPSG:3857 format (minx,miny,maxx,maxy)
+ * - reproject: If true, transforms bbox from EPSG:3857 to EPSG:4326
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -67,13 +77,14 @@ export async function GET(request: NextRequest) {
 
     // Security check: only allow whitelisted hosts
     if (!ALLOWED_WMS_HOSTS.includes(parsedUrl.hostname)) {
+      console.error(`WMS proxy blocked: ${parsedUrl.hostname} not in whitelist`);
       return NextResponse.json(
         { error: 'WMS host not allowed' },
         { status: 403 }
       );
     }
 
-    // Transform bbox if reprojection is requested
+    // Transform bbox if reprojection is requested (for servers that require EPSG:4326)
     const finalBbox = reproject ? transformBbox3857to4326(bbox) : bbox;
 
     // Build the full URL with bbox
@@ -83,6 +94,7 @@ export async function GET(request: NextRequest) {
     const response = await fetch(fullUrl, {
       headers: {
         'Accept': 'image/png,image/*,*/*',
+        'User-Agent': 'Impact-Climat/1.0',
       },
     });
 

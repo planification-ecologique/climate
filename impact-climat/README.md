@@ -32,7 +32,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 ## Project Structure
 
 ```
-drias-app/
+impact-climat/
 ├── src/
 │   ├── app/                    # Next.js App Router pages
 │   │   ├── page.tsx            # Homepage

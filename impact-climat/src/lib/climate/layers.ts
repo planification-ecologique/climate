@@ -1,4 +1,4 @@
-import { WMSLayerConfig } from '@/types/climate';
+import { WMSLayerConfig, WMTSLayerConfig } from '@/types/climate';
 
 // Available WMS layers for climate projections and related data
 // Focus on future climate scenarios (2050, 2100)
@@ -93,7 +93,166 @@ export const FLOOD_RISK_LAYERS: WMSLayerConfig[] = [
 
 // Reference and administrative layers
 export const REFERENCE_WMS_LAYERS: WMSLayerConfig[] = [
+  // Cours d'eau - Sandre BD Topage
+  {
+    id: 'sandre-cours-eau',
+    name: 'Cours d\'eau (BD Topage)',
+    url: 'https://services.sandre.eaufrance.fr/geo/sandre',
+    layers: 'CoursEau_FXX',
+    version: '1.3.0',
+    format: 'image/png',
+    transparent: true,
+    attribution: '© Sandre - EauFrance',
+    opacity: 0.8,
+    visible: false,
+    category: 'reference',
+  },
+];
 
+// Protected natural areas - INPN/MNHN
+// Note: Carmen Carto uses WMS 1.1.1 (not 1.3.0) and requires CORS proxy
+export const PROTECTED_AREAS_LAYERS: WMSLayerConfig[] = [
+  {
+    id: 'znieff-type1',
+    name: 'ZNIEFF Type 1 (zones remarquables)',
+    url: 'https://ws.carmencarto.fr/WMS/119/fxx_inpn',
+    layers: 'Znieff1',
+    version: '1.1.1',
+    format: 'image/png',
+    transparent: true,
+    attribution: '© INPN - MNHN',
+    opacity: 0.6,
+    visible: false,
+    category: 'environment',
+    needsProxy: true,
+  },
+  {
+    id: 'znieff-type2',
+    name: 'ZNIEFF Type 2 (grands ensembles)',
+    url: 'https://ws.carmencarto.fr/WMS/119/fxx_inpn',
+    layers: 'Znieff2',
+    version: '1.1.1',
+    format: 'image/png',
+    transparent: true,
+    attribution: '© INPN - MNHN',
+    opacity: 0.5,
+    visible: false,
+    category: 'environment',
+    needsProxy: true,
+  },
+  {
+    id: 'znieff-type1-mer',
+    name: 'ZNIEFF Type 1 Marines',
+    url: 'https://ws.carmencarto.fr/WMS/119/fxx_inpn',
+    layers: 'Znieff1_mer',
+    version: '1.1.1',
+    format: 'image/png',
+    transparent: true,
+    attribution: '© INPN - MNHN',
+    opacity: 0.6,
+    visible: false,
+    category: 'environment',
+    needsProxy: true,
+  },
+  {
+    id: 'znieff-type2-mer',
+    name: 'ZNIEFF Type 2 Marines',
+    url: 'https://ws.carmencarto.fr/WMS/119/fxx_inpn',
+    layers: 'Znieff2_mer',
+    version: '1.1.1',
+    format: 'image/png',
+    transparent: true,
+    attribution: '© INPN - MNHN',
+    opacity: 0.5,
+    visible: false,
+    category: 'environment',
+    needsProxy: true,
+  },
+];
+
+// Land cover and land use - IGN Geoplateforme
+// WARNING: These layers have strict rate limits (1 req/sec) and may load slowly
+// They require the proxy for bbox reprojection (EPSG:4326 only)
+export const LAND_COVER_LAYERS: WMSLayerConfig[] = [
+  // BD Forêt - Forest inventory
+  {
+    id: 'bdforet-v2',
+    name: '🐢 Inventaire forestier (BD Forêt v2)',
+    url: 'https://data.geopf.fr/wms-r/wms',
+    layers: 'LANDCOVER.FORESTINVENTORY.V2',
+    version: '1.3.0',
+    format: 'image/png',
+    transparent: true,
+    attribution: '© IGN - BD Forêt (chargement lent)',
+    opacity: 0.7,
+    visible: false,
+    category: 'environment',
+    apiKey: 'essentiels',
+    crs: 'EPSG:4326',
+    needsProxy: true,
+  },
+  // RPG - Agricultural parcels
+  {
+    id: 'rpg-agriculture',
+    name: '🐢 Parcelles agricoles (RPG)',
+    url: 'https://data.geopf.fr/wms-r/wms',
+    layers: 'LANDUSE.AGRICULTURE.LATEST',
+    version: '1.3.0',
+    format: 'image/png',
+    transparent: true,
+    attribution: '© IGN - RPG (chargement lent)',
+    opacity: 0.7,
+    visible: false,
+    category: 'exposure',
+    apiKey: 'essentiels',
+    crs: 'EPSG:4326',
+    needsProxy: true,
+  },
+];
+
+// Additional risk layers - Géorisques & BRGM
+export const GEOLOGICAL_RISK_LAYERS: WMSLayerConfig[] = [
+  // Clay shrink-swell risk
+  {
+    id: 'rga-argiles',
+    name: 'Retrait-gonflement des argiles',
+    url: 'https://www.georisques.gouv.fr/services',
+    layers: 'ALEARG_REALISE',
+    version: '1.3.0',
+    format: 'image/png',
+    transparent: true,
+    attribution: '© Géorisques - BRGM',
+    opacity: 0.6,
+    visible: false,
+    category: 'risk',
+  },
+  // Underground cavities
+  {
+    id: 'cavites-localisees',
+    name: 'Cavités souterraines localisées',
+    url: 'https://geoservices.brgm.fr/risques',
+    layers: 'CAVITE_LOCALISEE',
+    version: '1.1.1',
+    format: 'image/png',
+    transparent: true,
+    attribution: '© BRGM',
+    opacity: 0.7,
+    visible: false,
+    category: 'risk',
+  },
+  {
+    id: 'cavites-communes',
+    name: 'Cavités souterraines (par commune)',
+    url: 'https://geoservices.brgm.fr/risques',
+    layers: 'CAVITE_COMMUNE',
+    version: '1.1.1',
+    format: 'image/png',
+    transparent: true,
+    attribution: '© BRGM',
+    opacity: 0.6,
+    visible: false,
+    category: 'risk',
+  },
 ];
 
 // World Bank Climate Change Knowledge Portal - CMIP6 Climate Projections
@@ -273,6 +432,72 @@ export const CLIMATE_PROJECTION_LAYERS: WMSLayerConfig[] = [
   ...CMIP6_PRECIPITATION_LAYERS,
 ];
 
+// OCS GE (Occupation du Sol Grande Échelle) - IGN WMTS Layers
+// Land cover and land use at large scale, available via WMTS (pre-rendered tiles)
+// Source: https://data.geopf.fr/wmts - PM_6_16 TileMatrixSet (Web Mercator, zoom 6-16)
+export const OCS_GE_WMTS_LAYERS: WMTSLayerConfig[] = [
+  {
+    id: 'ocsge-couverture-2021-2023',
+    name: 'Couverture du sol (OCS GE 2021-2023)',
+    url: 'https://data.geopf.fr/wmts',
+    layer: 'OCSGE.COUVERTURE.2021-2023',
+    style: 'normal',
+    tileMatrixSet: 'PM_6_16',
+    format: 'image/png',
+    attribution: '© IGN - OCS GE',
+    opacity: 0.7,
+    visible: false,
+    category: 'exposure',
+    minZoom: 6,
+    maxZoom: 16,
+  },
+  {
+    id: 'ocsge-usage-2021-2023',
+    name: 'Usage du sol (OCS GE 2021-2023)',
+    url: 'https://data.geopf.fr/wmts',
+    layer: 'OCSGE.USAGE.2021-2023',
+    style: 'normal',
+    tileMatrixSet: 'PM_6_16',
+    format: 'image/png',
+    attribution: '© IGN - OCS GE',
+    opacity: 0.7,
+    visible: false,
+    category: 'exposure',
+    minZoom: 6,
+    maxZoom: 16,
+  },
+  {
+    id: 'ocsge-artif-2021-2023',
+    name: 'Artificialisation (OCS GE 2021-2023)',
+    url: 'https://data.geopf.fr/wmts',
+    layer: 'OCSGE.ARTIF.2021-2023',
+    style: 'normal',
+    tileMatrixSet: 'PM_6_16',
+    format: 'image/png',
+    attribution: '© IGN - OCS GE',
+    opacity: 0.7,
+    visible: false,
+    category: 'exposure',
+    minZoom: 6,
+    maxZoom: 16,
+  },
+  {
+    id: 'ocsge-construction-2021-2023',
+    name: 'Zones construites (OCS GE 2021-2023)',
+    url: 'https://data.geopf.fr/wmts',
+    layer: 'OCSGE.CONSTRUCTION.2021-2023',
+    style: 'normal',
+    tileMatrixSet: 'PM_6_16',
+    format: 'image/png',
+    attribution: '© IGN - OCS GE',
+    opacity: 0.7,
+    visible: false,
+    category: 'exposure',
+    minZoom: 6,
+    maxZoom: 16,
+  },
+];
+
 // Get all layers combined
 export function getAllLayers(): WMSLayerConfig[] {
   return [
@@ -280,6 +505,9 @@ export function getAllLayers(): WMSLayerConfig[] {
     ...FLOOD_RISK_LAYERS,
     ...REFERENCE_WMS_LAYERS,
     ...CLIMATE_PROJECTION_LAYERS,
+    ...PROTECTED_AREAS_LAYERS,
+    ...LAND_COVER_LAYERS,
+    ...GEOLOGICAL_RISK_LAYERS,
   ];
 }
 
@@ -289,6 +517,16 @@ export function getLayersByCategory(category: 'climate' | 'risk' | 'reference'):
 
 export function getLayerById(id: string): WMSLayerConfig | undefined {
   return getAllLayers().find(layer => layer.id === id);
+}
+
+// Get all WMTS layers
+export function getAllWMTSLayers(): WMTSLayerConfig[] {
+  return [...OCS_GE_WMTS_LAYERS];
+}
+
+// Get WMTS layer by ID
+export function getWMTSLayerById(id: string): WMTSLayerConfig | undefined {
+  return getAllWMTSLayers().find(layer => layer.id === id);
 }
 
 // Data sources for climate projections (for future integration)

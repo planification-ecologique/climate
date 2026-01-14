@@ -11,8 +11,8 @@ import Map, {
   Popup,
 } from "react-map-gl/maplibre";
 import { useClimateStore } from "@/stores/useClimateStore";
-import { getAllLayers } from "@/lib/climate/layers";
-import { WMSLayerConfig } from "@/types/climate";
+import { getAllLayers, getAllWMTSLayers } from "@/lib/climate/layers";
+import { WMSLayerConfig, WMTSLayerConfig } from "@/types/climate";
 import type { FeatureCollection } from "geojson";
 
 // CartoDB Light (no labels) basemap - clean background for data visualization
@@ -97,6 +97,7 @@ export function ClimateMap({ className }: ClimateMapProps) {
   }, []);
 
   const allLayers = getAllLayers();
+  const allWMTSLayers = getAllWMTSLayers();
 
   const handleMapClick = useCallback(
     (event: MapLayerMouseEvent) => {
@@ -135,8 +136,11 @@ export function ClimateMap({ className }: ClimateMapProps) {
   }, []);
 
   // Check if a URL needs to go through the CORS proxy
-  const needsCorsProxy = (url: string): boolean => {
-    return url.includes('climatedata.worldbank.org');
+  const needsCorsProxy = (layer: WMSLayerConfig): boolean => {
+    // Force proxy if explicitly set
+    if (layer.needsProxy) return true;
+    // Auto-detect servers that need proxy
+    return layer.url.includes('climatedata.worldbank.org');
   };
 
   // Generate WMS tile URL for a layer
@@ -149,7 +153,14 @@ export function ClimateMap({ className }: ClimateMapProps) {
     const bboxPlaceholder = useEpsg4326 ? "{bbox-epsg-4326}" : "{bbox-epsg-3857}";
     
     // Build params manually to avoid URL encoding the bbox placeholder
-    const params = [
+    const params: string[] = [];
+    
+    // Add API key first if specified
+    if (layer.apiKey) {
+      params.push(`apikey=${layer.apiKey}`);
+    }
+    
+    params.push(
       "service=WMS",
       "request=GetMap",
       `version=${layer.version}`,
@@ -157,8 +168,8 @@ export function ClimateMap({ className }: ClimateMapProps) {
       `format=${encodeURIComponent(layer.format || "image/png")}`,
       `transparent=${layer.transparent ?? true}`,
       "width=256",
-      "height=256",
-    ];
+      "height=256"
+    );
     
     // WMS 1.3.0 uses CRS, older versions use SRS
     if (isWms13) {
@@ -167,10 +178,8 @@ export function ClimateMap({ className }: ClimateMapProps) {
       params.push(`srs=${crs}`);
     }
     
-    // Add styles parameter if specified (for THREDDS servers)
-    if (layer.styles) {
-      params.push(`styles=${encodeURIComponent(layer.styles)}`);
-    }
+    // Add styles parameter (required by some WMS servers like IGN, can be empty)
+    params.push(`styles=${layer.styles ? encodeURIComponent(layer.styles) : ''}`);
     
     // Add color scale range for climate data visualization
     if (layer.colorScaleRange) {
@@ -183,12 +192,15 @@ export function ClimateMap({ className }: ClimateMapProps) {
       params.push(`time=${encodeURIComponent(layer.time)}`);
     }
     
-    // Use CORS proxy for World Bank and other servers that don't support CORS
-    if (needsCorsProxy(layer.url)) {
-      // For World Bank, we need to:
-      // 1. Use EPSG:3857 bbox (which MapLibre provides)
-      // 2. Let the proxy transform to EPSG:4326 (which World Bank requires)
-      const rawParams = [
+    // Use CORS proxy for servers that don't support CORS
+    if (needsCorsProxy(layer)) {
+      // Check if this layer needs bbox reprojection (from 3857 to 4326)
+      const needsReproject = useEpsg4326;
+      
+      // Build raw params for proxy
+      const rawParams: string[] = [];
+      if (layer.apiKey) rawParams.push(`apikey=${layer.apiKey}`);
+      rawParams.push(
         "service=WMS",
         "request=GetMap",
         `version=${layer.version}`,
@@ -196,10 +208,18 @@ export function ClimateMap({ className }: ClimateMapProps) {
         `format=${layer.format || "image/png"}`,
         `transparent=${layer.transparent ?? true}`,
         "width=256",
-        "height=256",
-        "crs=EPSG:4326", // World Bank requires 4326, proxy will transform bbox
-      ];
-      if (layer.styles) rawParams.push(`styles=${layer.styles}`);
+        "height=256"
+      );
+      
+      // Add CRS/SRS parameter
+      if (isWms13) {
+        rawParams.push(`crs=${crs}`);
+      } else {
+        rawParams.push(`srs=${crs}`);
+      }
+      
+      // Add styles parameter (required by some WMS servers, can be empty)
+      rawParams.push(`styles=${layer.styles || ''}`);
       if (layer.colorScaleRange) {
         rawParams.push(`colorscalerange=${layer.colorScaleRange[0]},${layer.colorScaleRange[1]}`);
         rawParams.push("numcolorbands=256");
@@ -207,8 +227,8 @@ export function ClimateMap({ className }: ClimateMapProps) {
       
       const baseUrlWithParams = `${layer.url}?${rawParams.join("&")}`;
       const encodedBaseUrl = encodeURIComponent(baseUrlWithParams);
-      // Use EPSG:3857 bbox from MapLibre, proxy will reproject to 4326
-      const proxyUrl = `/api/wms?baseUrl=${encodedBaseUrl}&bbox={bbox-epsg-3857}&reproject=true`;
+      // Always use EPSG:3857 bbox from MapLibre, proxy will reproject to 4326 if needed
+      const proxyUrl = `/api/wms?baseUrl=${encodedBaseUrl}&bbox={bbox-epsg-3857}${needsReproject ? '&reproject=true' : ''}`;
       console.log(`WMS URL (proxied) for ${layer.id}:`, proxyUrl);
       return proxyUrl;
     }
@@ -218,6 +238,16 @@ export function ClimateMap({ className }: ClimateMapProps) {
     const directUrl = `${layer.url}?${params.join("&")}`;
     console.log(`WMS URL for ${layer.id}:`, directUrl);
     return directUrl;
+  };
+
+  // Generate WMTS tile URL for a layer
+  // WMTS uses {z}/{x}/{y} tile coordinates (standard XYZ tile format)
+  const getWMTSTileUrl = (layer: WMTSLayerConfig): string => {
+    // WMTS KVP (Key-Value Pairs) format
+    // MapLibre uses {z}, {x}, {y} placeholders for tile coordinates
+    const url = `${layer.url}?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=${encodeURIComponent(layer.layer)}&STYLE=${encodeURIComponent(layer.style)}&TILEMATRIXSET=${encodeURIComponent(layer.tileMatrixSet)}&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=${encodeURIComponent(layer.format)}`;
+    console.log(`WMTS URL for ${layer.id}:`, url);
+    return url;
   };
 
   return (
@@ -266,6 +296,32 @@ export function ClimateMap({ className }: ClimateMapProps) {
               type="raster"
               tiles={[getWMSTileUrl(layer)]}
               tileSize={256}
+            >
+              <Layer
+                id={`layer-${layer.id}`}
+                type="raster"
+                paint={{
+                  "raster-opacity": opacity,
+                }}
+              />
+            </Source>
+          );
+        })}
+
+        {/* WMTS Layers - pre-rendered tiles (OCS GE, etc.) */}
+        {mapLoaded && allWMTSLayers.map((layer) => {
+          const isActive = activeLayers.includes(layer.id);
+          const opacity = isActive ? (layerOpacity[layer.id] ?? layer.opacity ?? 0.7) : 0;
+
+          return (
+            <Source
+              key={layer.id}
+              id={`wmts-${layer.id}`}
+              type="raster"
+              tiles={[getWMTSTileUrl(layer)]}
+              tileSize={256}
+              minzoom={layer.minZoom ?? 0}
+              maxzoom={layer.maxZoom ?? 22}
             >
               <Layer
                 id={`layer-${layer.id}`}

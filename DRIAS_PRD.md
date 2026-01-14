@@ -126,7 +126,7 @@ The application follows the existing DRIAS three-space model:
 ### 4.2 Project Structure
 
 ```
-drias-app/
+impact-climat/
 ├── src/
 │   ├── app/                      # Next.js App Router
 │   │   ├── layout.tsx            # Root layout with DSFR

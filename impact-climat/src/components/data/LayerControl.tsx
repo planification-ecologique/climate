@@ -1,25 +1,40 @@
 "use client";
 
 import { useClimateStore } from "@/stores/useClimateStore";
-import { getAllLayers } from "@/lib/climate/layers";
+import { getAllLayers, getAllWMTSLayers } from "@/lib/climate/layers";
 import { Accordion } from "@codegouvfr/react-dsfr/Accordion";
 import { Checkbox } from "@codegouvfr/react-dsfr/Checkbox";
-import { WMSLayerConfig } from "@/types/climate";
+import { WMSLayerConfig, WMTSLayerConfig } from "@/types/climate";
 
 export function LayerControl() {
   const { activeLayers, toggleLayer, layerOpacity, setLayerOpacity } = useClimateStore();
 
   const allLayers = getAllLayers();
+  const allWMTSLayers = getAllWMTSLayers();
+  
   const climateLayers = allLayers.filter(l => l.category === 'climate');
   const riskLayers = allLayers.filter(l => l.category === 'risk');
   const referenceLayers = allLayers.filter(l => l.category === 'reference');
+  const environmentLayers = allLayers.filter(l => l.category === 'environment');
+  const exposureLayers = allLayers.filter(l => l.category === 'exposure');
+  
+  // WMTS layers by category
+  const wmtsExposureLayers = allWMTSLayers.filter(l => l.category === 'exposure');
 
   // Group climate layers by type
   const temperatureLayers = climateLayers.filter(l => l.id.includes('cmip6-tas'));
   const precipLayers = climateLayers.filter(l => l.id.includes('cmip6-pr'));
   const seaLevelLayers = climateLayers.filter(l => l.id.includes('slr-'));
 
-  const renderLayerItem = (layer: WMSLayerConfig) => (
+  // Group environment layers
+  const znieffLayers = environmentLayers.filter(l => l.id.includes('znieff'));
+  const forestLayers = environmentLayers.filter(l => l.id.includes('bdforet'));
+
+  // Group risk layers
+  const floodLayers = riskLayers.filter(l => l.id.includes('flood'));
+  const geologicalLayers = riskLayers.filter(l => l.id.includes('rga') || l.id.includes('cavite'));
+
+  const renderLayerItem = (layer: WMSLayerConfig | WMTSLayerConfig) => (
     <div key={layer.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 0" }}>
       <Checkbox
         options={[
@@ -97,27 +112,117 @@ export function LayerControl() {
         )}
       </Accordion>
 
-      {/* Current flood risk */}
+      {/* Flood risk */}
       <Accordion
-        label={`📍 Risques actuels (${riskLayers.length})`}
+        label={`🌊 Inondations (${floodLayers.length})`}
         defaultExpanded={false}
       >
         <p style={{ fontSize: "10px", color: "#666", marginBottom: "8px", padding: "6px", background: "#fef3c7", borderRadius: "4px" }}>
           Cartographie des zones inondables (Géorisques)
         </p>
-        {riskLayers.length > 0 ? (
-          riskLayers.map(renderLayerItem)
+        {floodLayers.length > 0 ? (
+          floodLayers.map(renderLayerItem)
         ) : (
           <p style={{ fontSize: "12px", color: "#666" }}>Aucune couche disponible</p>
         )}
       </Accordion>
 
-      {/* Reference layers */}
+      {/* Geological risks */}
+      <Accordion
+        label={`⛰️ Risques géologiques (${geologicalLayers.length})`}
+        defaultExpanded={false}
+      >
+        <p style={{ fontSize: "10px", color: "#666", marginBottom: "8px", padding: "6px", background: "#fef3c7", borderRadius: "4px" }}>
+          Retrait-gonflement des argiles et cavités (Géorisques, BRGM)
+        </p>
+        <p style={{ fontSize: "9px", color: "#92400e", marginBottom: "8px", padding: "4px 6px", background: "#fef9c3", borderRadius: "4px" }}>
+          ℹ️ RGA : données disponibles uniquement dans les zones étudiées
+        </p>
+        {geologicalLayers.length > 0 ? (
+          geologicalLayers.map(renderLayerItem)
+        ) : (
+          <p style={{ fontSize: "12px", color: "#666" }}>Aucune couche disponible</p>
+        )}
+      </Accordion>
+
+      {/* Protected natural areas - ZNIEFF */}
+      <Accordion
+        label={`🌿 Espaces naturels protégés (${znieffLayers.length})`}
+        defaultExpanded={false}
+      >
+        <p style={{ fontSize: "10px", color: "#666", marginBottom: "8px", padding: "6px", background: "#dcfce7", borderRadius: "4px" }}>
+          Zones naturelles d&apos;intérêt écologique (INPN/MNHN)
+        </p>
+        {znieffLayers.length > 0 ? (
+          znieffLayers.map(renderLayerItem)
+        ) : (
+          <p style={{ fontSize: "12px", color: "#666" }}>Aucune couche disponible</p>
+        )}
+      </Accordion>
+
+      {/* Forest inventory */}
+      <Accordion
+        label={`🌲 Forêts (${forestLayers.length})`}
+        defaultExpanded={false}
+      >
+        <p style={{ fontSize: "10px", color: "#666", marginBottom: "8px", padding: "6px", background: "#dcfce7", borderRadius: "4px" }}>
+          Inventaire forestier national (IGN BD Forêt)
+        </p>
+        <p style={{ fontSize: "9px", color: "#b45309", marginBottom: "8px", padding: "4px 6px", background: "#fef3c7", borderRadius: "4px" }}>
+          🐢 Chargement lent - le serveur IGN limite les requêtes
+        </p>
+        {forestLayers.length > 0 ? (
+          forestLayers.map(renderLayerItem)
+        ) : (
+          <p style={{ fontSize: "12px", color: "#666" }}>Aucune couche disponible</p>
+        )}
+      </Accordion>
+
+      {/* Land use and exposure */}
+      <Accordion
+        label={`🏘️ Occupation du sol (${exposureLayers.length + wmtsExposureLayers.length})`}
+        defaultExpanded={false}
+      >
+        {/* OCS GE - fast WMTS tiles */}
+        {wmtsExposureLayers.length > 0 && (
+          <>
+            <p style={{ fontSize: "10px", color: "#666", marginBottom: "8px", padding: "6px", background: "#e0e7ff", borderRadius: "4px" }}>
+              🗺️ OCS GE - Occupation du sol grande échelle (IGN)
+            </p>
+            <p style={{ fontSize: "9px", color: "#059669", marginBottom: "8px", padding: "4px 6px", background: "#d1fae5", borderRadius: "4px" }}>
+              ✅ Zoom 6-16 · Données disponibles sur certains départements
+            </p>
+            {wmtsExposureLayers.map(renderLayerItem)}
+          </>
+        )}
+        
+        {/* RPG Agriculture - rate-limited WMS */}
+        {exposureLayers.length > 0 && (
+          <>
+            <p style={{ fontSize: "10px", color: "#666", marginTop: "12px", marginBottom: "8px", padding: "6px", background: "#fef3c7", borderRadius: "4px" }}>
+              🌾 Parcelles agricoles (IGN RPG)
+            </p>
+            <p style={{ fontSize: "9px", color: "#b45309", marginBottom: "8px", padding: "4px 6px", background: "#fef9c3", borderRadius: "4px" }}>
+              🐢 Chargement lent - le serveur IGN limite les requêtes
+            </p>
+            {exposureLayers.map(renderLayerItem)}
+          </>
+        )}
+        
+        {exposureLayers.length === 0 && wmtsExposureLayers.length === 0 && (
+          <p style={{ fontSize: "12px", color: "#666" }}>Aucune couche disponible</p>
+        )}
+      </Accordion>
+
+      {/* Reference layers - Hydrography */}
       {referenceLayers.length > 0 && (
         <Accordion
-          label={`🗺️ Référence (${referenceLayers.length})`}
+          label={`💧 Hydrographie (${referenceLayers.length})`}
           defaultExpanded={false}
         >
+          <p style={{ fontSize: "10px", color: "#666", marginBottom: "8px", padding: "6px", background: "#dbeafe", borderRadius: "4px" }}>
+            Réseau hydrographique (Sandre)
+          </p>
           {referenceLayers.map(renderLayerItem)}
         </Accordion>
       )}
@@ -182,7 +287,7 @@ export function LayerControl() {
         borderRadius: "4px",
         borderLeft: "3px solid #22c55e"
       }}>
-        <strong>Source:</strong> World Bank Climate Change Knowledge Portal (CMIP6), BRGM, Géorisques
+        <strong>Sources:</strong> World Bank CCKP (CMIP6), BRGM, Géorisques, IGN, INPN/MNHN, Sandre
       </div>
     </div>
   );
