@@ -1,13 +1,14 @@
 "use client";
 
-import { useClimateStore } from "@/stores/useClimateStore";
+import { useClimateStore, PERCENTILE_OPTIONS } from "@/stores/useClimateStore";
 import { getAllLayers, getAllWMTSLayers } from "@/lib/climate/layers";
 import { Accordion } from "@codegouvfr/react-dsfr/Accordion";
 import { Checkbox } from "@codegouvfr/react-dsfr/Checkbox";
+import { SegmentedControl } from "@codegouvfr/react-dsfr/SegmentedControl";
 import { WMSLayerConfig, WMTSLayerConfig } from "@/types/climate";
 
 export function LayerControl() {
-  const { activeLayers, toggleLayer, layerOpacity, setLayerOpacity } = useClimateStore();
+  const { activeLayers, toggleLayer, layerOpacity, setLayerOpacity, percentile, setPercentile } = useClimateStore();
 
   const allLayers = getAllLayers();
   const allWMTSLayers = getAllWMTSLayers();
@@ -66,7 +67,6 @@ export function LayerControl() {
   return (
     <div style={{}}>
       <h3 style={{ fontSize: "14px", fontWeight: 600, marginBottom: "12px" }}>Couches de données</h3>
-      
       {/* CMIP6 Temperature Projections */}
       <Accordion
         label={`🌡️ Température (${temperatureLayers.length})`}
@@ -75,6 +75,42 @@ export function LayerControl() {
         <p style={{ fontSize: "10px", color: "#666", marginBottom: "8px", padding: "6px", background: "#fee2e2", borderRadius: "4px" }}>
           Anomalies de température par rapport à la période 1995-2014 (CMIP6)
         </p>
+              {/* Percentile selector for World Bank CMIP6 data */}
+      <div style={{ marginBottom: "0px", padding: "12px", background: "#f0f9ff", borderRadius: "8px", border: "1px solid #bfdbfe" }}>
+        <label style={{ fontSize: "12px", fontWeight: 600, color: "#1e40af", marginBottom: "8px", display: "block" }}>
+          📊 Percentile (Banque Mondiale CMIP6)
+        </label>
+        <SegmentedControl
+          small
+          hideLegend
+          segments={[
+            {
+              label: "P10",
+              nativeInputProps: {
+                checked: percentile === "p10",
+                onChange: () => setPercentile("p10"),
+              },
+            },
+            {
+              label: "P50",
+              nativeInputProps: {
+                checked: percentile === "p50",
+                onChange: () => setPercentile("p50"),
+              },
+            },
+            {
+              label: "P90",
+              nativeInputProps: {
+                checked: percentile === "p90",
+                onChange: () => setPercentile("p90"),
+              },
+            },
+          ]}
+        />
+        <p style={{ fontSize: "10px", color: "#6b7280", marginTop: "6px", marginBottom: "0px" }}>
+          {PERCENTILE_OPTIONS[percentile].description}
+        </p>
+      </div>
         {temperatureLayers.length > 0 ? (
           temperatureLayers.map(renderLayerItem)
         ) : (

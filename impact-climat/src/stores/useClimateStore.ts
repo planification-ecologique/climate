@@ -2,11 +2,21 @@ import { create } from 'zustand';
 import { ClimateIndicator, Scenario, TimePeriod, MapViewport, SelectedLocation } from '@/types/climate';
 import { getAllLayers } from '@/lib/climate/layers';
 
+// Percentile options for World Bank CMIP6 data
+export type Percentile = 'p10' | 'p50' | 'p90';
+
+export const PERCENTILE_OPTIONS: Record<Percentile, { label: string; description: string }> = {
+  p10: { label: 'P10 (optimiste)', description: '10e percentile - scénario bas' },
+  p50: { label: 'P50 (médian)', description: '50e percentile - scénario médian' },
+  p90: { label: 'P90 (pessimiste)', description: '90e percentile - scénario haut' },
+};
+
 interface ClimateState {
   // Current selections
   indicator: ClimateIndicator;
   scenario: Scenario;
   period: TimePeriod;
+  percentile: Percentile;
 
   // Map state
   viewport: MapViewport;
@@ -24,6 +34,7 @@ interface ClimateState {
   setIndicator: (indicator: ClimateIndicator) => void;
   setScenario: (scenario: Scenario) => void;
   setPeriod: (period: TimePeriod) => void;
+  setPercentile: (percentile: Percentile) => void;
   setViewport: (viewport: MapViewport) => void;
   setSelectedLocation: (location: SelectedLocation | null) => void;
   toggleLayer: (layerId: string) => void;
@@ -57,6 +68,7 @@ export const useClimateStore = create<ClimateState>((set) => ({
   indicator: 'tas',
   scenario: 'rcp45',
   period: 'end',
+  percentile: 'p50',
   viewport: DEFAULT_VIEWPORT,
   selectedLocation: null,
   activeLayers: DEFAULT_ACTIVE_LAYERS,
@@ -68,6 +80,7 @@ export const useClimateStore = create<ClimateState>((set) => ({
   setIndicator: (indicator) => set({ indicator }),
   setScenario: (scenario) => set({ scenario }),
   setPeriod: (period) => set({ period }),
+  setPercentile: (percentile) => set({ percentile }),
   setViewport: (viewport) => set({ viewport }),
   setSelectedLocation: (location) => set({ selectedLocation: location }),
 
@@ -91,6 +104,7 @@ export const useClimateStore = create<ClimateState>((set) => ({
       indicator: 'tas',
       scenario: 'rcp45',
       period: 'end',
+      percentile: 'p50',
       viewport: DEFAULT_VIEWPORT,
       selectedLocation: null,
       activeLayers: DEFAULT_ACTIVE_LAYERS,

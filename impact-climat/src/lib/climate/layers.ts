@@ -62,6 +62,8 @@ export const SEA_LEVEL_RISE_LAYERS: WMSLayerConfig[] = [
 ];
 
 // Flood risk layers - Current baseline for climate adaptation
+// Géorisques WMS does not send CORS headers; use proxy to avoid cross-origin errors.
+// Note: Georisques WMS only supports EPSG:4326, so we use crs and needsProxy for reprojection.
 export const FLOOD_RISK_LAYERS: WMSLayerConfig[] = [
   {
     id: 'flood-zones',
@@ -75,6 +77,8 @@ export const FLOOD_RISK_LAYERS: WMSLayerConfig[] = [
     opacity: 0.6,
     visible: true,
     category: 'risk',
+    needsProxy: true,
+    crs: 'EPSG:4326',
   },
   {
     id: 'flood-alea',
@@ -88,6 +92,8 @@ export const FLOOD_RISK_LAYERS: WMSLayerConfig[] = [
     opacity: 0.6,
     visible: false,
     category: 'risk',
+    needsProxy: true,
+    crs: 'EPSG:4326',
   },
 ];
 
@@ -212,7 +218,7 @@ export const LAND_COVER_LAYERS: WMSLayerConfig[] = [
 
 // Additional risk layers - Géorisques & BRGM
 export const GEOLOGICAL_RISK_LAYERS: WMSLayerConfig[] = [
-  // Clay shrink-swell risk
+  // Clay shrink-swell risk (Géorisques – no CORS; use proxy)
   {
     id: 'rga-argiles',
     name: 'Retrait-gonflement des argiles',
@@ -225,6 +231,7 @@ export const GEOLOGICAL_RISK_LAYERS: WMSLayerConfig[] = [
     opacity: 0.6,
     visible: false,
     category: 'risk',
+    needsProxy: true,
   },
   // Underground cavities
   {
@@ -260,14 +267,40 @@ export const GEOLOGICAL_RISK_LAYERS: WMSLayerConfig[] = [
 // https://climatedata.worldbank.org/
 
 // Helper to build World Bank THREDDS WMS URL
-// Note: Available percentiles are p10, p90 (not p50/median which return 500 errors)
-function buildWorldBankWMSUrl(
+// Available percentiles: p10, p50, p90
+export function buildWorldBankWMSUrl(
   variable: string,
   ssp: string,
   period: string,
-  percentile: string = 'p10'
+  percentile: string = 'p50'
 ): string {
-  return `https://climatedata.worldbank.org/thredds/wms/CRM/cmip6-x0.25/${variable}/ensemble-all-${ssp}/anomaly-${variable}-seasonal-mean_cmip6-x0.25_ensemble-all-${ssp}_climatology_${percentile}_${period}.nc`;
+  // World Bank THREDDS server uses 'median' in filenames for p50 (50th percentile)
+  const percentileSegment = percentile === 'p50' ? 'median' : percentile;
+  return `https://climatedata.worldbank.org/thredds/wms/CRM/cmip6-x0.25/${variable}/ensemble-all-${ssp}/anomaly-${variable}-seasonal-mean_cmip6-x0.25_ensemble-all-${ssp}_climatology_${percentileSegment}_${period}.nc`;
+}
+
+// Check if a layer is a World Bank CMIP6 layer (needs dynamic percentile)
+export function isWorldBankCMIP6Layer(layerId: string): boolean {
+  return layerId.startsWith('cmip6-');
+}
+
+// Extract layer parameters from layer ID (e.g., 'cmip6-tas-ssp585-2050' -> { variable: 'tas', ssp: 'ssp585', period: '2040-2059' })
+export function parseCMIP6LayerId(layerId: string): { variable: string; ssp: string; period: string } | null {
+  const match = layerId.match(/^cmip6-(\w+)-(\w+)-(\d+)$/);
+  if (!match) return null;
+  
+  const [, variable, ssp, year] = match;
+  // Map year to period
+  const periodMap: Record<string, string> = {
+    '2050': '2040-2059',
+    '2100': '2080-2099',
+  };
+  
+  return {
+    variable,
+    ssp,
+    period: periodMap[year] || '2040-2059',
+  };
 }
 
 // Temperature Anomaly Projections - SSP5-8.5 (High emissions scenario)

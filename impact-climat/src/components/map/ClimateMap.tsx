@@ -11,7 +11,7 @@ import Map, {
   Popup,
 } from "react-map-gl/maplibre";
 import { useClimateStore } from "@/stores/useClimateStore";
-import { getAllLayers, getAllWMTSLayers } from "@/lib/climate/layers";
+import { getAllLayers, getAllWMTSLayers, isWorldBankCMIP6Layer, parseCMIP6LayerId, buildWorldBankWMSUrl } from "@/lib/climate/layers";
 import { WMSLayerConfig, WMTSLayerConfig } from "@/types/climate";
 import type { FeatureCollection } from "geojson";
 
@@ -73,6 +73,7 @@ export function ClimateMap({ className }: ClimateMapProps) {
     activeLayers,
     layerOpacity,
     setSelectedLocation,
+    percentile,
   } = useClimateStore();
 
   // Load France boundaries GeoJSON
@@ -146,6 +147,15 @@ export function ClimateMap({ className }: ClimateMapProps) {
   // Generate WMS tile URL for a layer
   // Note: bbox placeholder must NOT be URL-encoded for MapLibre to substitute it
   const getWMSTileUrl = (layer: WMSLayerConfig): string => {
+    // For World Bank CMIP6 layers, dynamically update URL with selected percentile
+    let layerUrl = layer.url;
+    if (isWorldBankCMIP6Layer(layer.id)) {
+      const params = parseCMIP6LayerId(layer.id);
+      if (params) {
+        layerUrl = buildWorldBankWMSUrl(params.variable, params.ssp, params.period, percentile);
+      }
+    }
+    
     const isWms13 = layer.version === "1.3.0";
     // Some WMS servers (like World Bank THREDDS) use EPSG:4326
     const useEpsg4326 = layer.crs === "EPSG:4326";
@@ -225,7 +235,7 @@ export function ClimateMap({ className }: ClimateMapProps) {
         rawParams.push("numcolorbands=256");
       }
       
-      const baseUrlWithParams = `${layer.url}?${rawParams.join("&")}`;
+      const baseUrlWithParams = `${layerUrl}?${rawParams.join("&")}`;
       const encodedBaseUrl = encodeURIComponent(baseUrlWithParams);
       // Always use EPSG:3857 bbox from MapLibre, proxy will reproject to 4326 if needed
       const proxyUrl = `/api/wms?baseUrl=${encodedBaseUrl}&bbox={bbox-epsg-3857}${needsReproject ? '&reproject=true' : ''}`;
@@ -235,7 +245,7 @@ export function ClimateMap({ className }: ClimateMapProps) {
     
     // For non-proxied URLs, add bbox directly
     params.push(`bbox=${bboxPlaceholder}`);
-    const directUrl = `${layer.url}?${params.join("&")}`;
+    const directUrl = `${layerUrl}?${params.join("&")}`;
     console.log(`WMS URL for ${layer.id}:`, directUrl);
     return directUrl;
   };
@@ -284,55 +294,60 @@ export function ClimateMap({ className }: ClimateMapProps) {
         <NavigationControl position="top-right" />
         <ScaleControl position="bottom-left" />
 
-        {/* WMS Layers - always render all sources to maintain z-order, control visibility via opacity */}
-        {mapLoaded && allLayers.map((layer) => {
-          const isActive = activeLayers.includes(layer.id);
-          const opacity = isActive ? (layerOpacity[layer.id] ?? layer.opacity ?? 0.7) : 0;
+        {/* WMS Layers - only render active layers to avoid unnecessary tile fetches */}
+        {mapLoaded && allLayers
+          .filter((layer) => activeLayers.includes(layer.id))
+          .map((layer) => {
+            const opacity = layerOpacity[layer.id] ?? layer.opacity ?? 0.7;
+            // For CMIP6 layers, include percentile in key to force re-render when it changes
+            const isCMIP6 = isWorldBankCMIP6Layer(layer.id);
+            const sourceKey = isCMIP6 ? `${layer.id}-${percentile}` : layer.id;
 
-          return (
-            <Source
-              key={layer.id}
-              id={`wms-${layer.id}`}
-              type="raster"
-              tiles={[getWMSTileUrl(layer)]}
-              tileSize={256}
-            >
-              <Layer
-                id={`layer-${layer.id}`}
+            return (
+              <Source
+                key={sourceKey}
+                id={`wms-${sourceKey}`}
                 type="raster"
-                paint={{
-                  "raster-opacity": opacity,
-                }}
-              />
-            </Source>
-          );
-        })}
+                tiles={[getWMSTileUrl(layer)]}
+                tileSize={256}
+              >
+                <Layer
+                  id={`layer-${sourceKey}`}
+                  type="raster"
+                  paint={{
+                    "raster-opacity": opacity,
+                  }}
+                />
+              </Source>
+            );
+          })}
 
-        {/* WMTS Layers - pre-rendered tiles (OCS GE, etc.) */}
-        {mapLoaded && allWMTSLayers.map((layer) => {
-          const isActive = activeLayers.includes(layer.id);
-          const opacity = isActive ? (layerOpacity[layer.id] ?? layer.opacity ?? 0.7) : 0;
+        {/* WMTS Layers - only render active layers to avoid unnecessary tile fetches */}
+        {mapLoaded && allWMTSLayers
+          .filter((layer) => activeLayers.includes(layer.id))
+          .map((layer) => {
+            const opacity = layerOpacity[layer.id] ?? layer.opacity ?? 0.7;
 
-          return (
-            <Source
-              key={layer.id}
-              id={`wmts-${layer.id}`}
-              type="raster"
-              tiles={[getWMTSTileUrl(layer)]}
-              tileSize={256}
-              minzoom={layer.minZoom ?? 0}
-              maxzoom={layer.maxZoom ?? 22}
-            >
-              <Layer
-                id={`layer-${layer.id}`}
+            return (
+              <Source
+                key={layer.id}
+                id={`wmts-${layer.id}`}
                 type="raster"
-                paint={{
-                  "raster-opacity": opacity,
-                }}
-              />
-            </Source>
-          );
-        })}
+                tiles={[getWMTSTileUrl(layer)]}
+                tileSize={256}
+                minzoom={layer.minZoom ?? 0}
+                maxzoom={layer.maxZoom ?? 22}
+              >
+                <Layer
+                  id={`layer-${layer.id}`}
+                  type="raster"
+                  paint={{
+                    "raster-opacity": opacity,
+                  }}
+                />
+              </Source>
+            );
+          })}
 
         {/* Administrative boundaries - always rendered on top, visibility controlled via store */}
         
