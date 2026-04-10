@@ -11,7 +11,7 @@ import Map, {
   Popup,
 } from "react-map-gl/maplibre";
 import { useClimateStore } from "@/stores/useClimateStore";
-import { getAllLayers, getAllWMTSLayers, isWorldBankCMIP6Layer, parseCMIP6LayerId, buildWorldBankWMSUrl } from "@/lib/climate/layers";
+import { getAllLayers, getAllWMTSLayers, getAllXYZLayers, isWorldBankCMIP6Layer, parseCMIP6LayerId, buildWorldBankWMSUrl } from "@/lib/climate/layers";
 import { WMSLayerConfig, WMTSLayerConfig } from "@/types/climate";
 import type { FeatureCollection } from "geojson";
 
@@ -99,6 +99,7 @@ export function ClimateMap({ className }: ClimateMapProps) {
 
   const allLayers = getAllLayers();
   const allWMTSLayers = getAllWMTSLayers();
+  const allXYZLayers = getAllXYZLayers();
 
   const handleMapClick = useCallback(
     (event: MapLayerMouseEvent) => {
@@ -334,6 +335,32 @@ export function ClimateMap({ className }: ClimateMapProps) {
                 id={`wmts-${layer.id}`}
                 type="raster"
                 tiles={[getWMTSTileUrl(layer)]}
+                tileSize={256}
+                minzoom={layer.minZoom ?? 0}
+                maxzoom={layer.maxZoom ?? 22}
+              >
+                <Layer
+                  id={`layer-${layer.id}`}
+                  type="raster"
+                  paint={{
+                    "raster-opacity": opacity,
+                  }}
+                />
+              </Source>
+            );
+          })}
+
+        {/* XYZ Raster Tile Layers (self-hosted) */}
+        {mapLoaded && allXYZLayers
+          .filter((layer) => activeLayers.includes(layer.id))
+          .map((layer) => {
+            const opacity = layerOpacity[layer.id] ?? layer.opacity ?? 0.7;
+            return (
+              <Source
+                key={layer.id}
+                id={`xyz-${layer.id}`}
+                type="raster"
+                tiles={layer.tiles}
                 tileSize={256}
                 minzoom={layer.minZoom ?? 0}
                 maxzoom={layer.maxZoom ?? 22}

@@ -1,8 +1,10 @@
 "use client";
 
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { MapSidebar } from "@/components/map/MapSidebar";
 import { Legend } from "@/components/map/Legend";
+import { useLayerUrlSync } from "@/hooks/useLayerUrlSync";
 
 // Dynamic import for map to avoid SSR issues with MapLibre
 const ClimateMap = dynamic(
@@ -44,23 +46,33 @@ const ClimateMap = dynamic(
   }
 );
 
-export default function VisualiserPage() {
+function VisualiserContent() {
+  useLayerUrlSync();
+
   return (
-    <div 
-      style={{ 
-        position: "relative", 
+    <div
+      style={{
+        position: "relative",
         height: "calc(100vh - 120px)", // Full viewport minus header
         minHeight: "85vh",
       }}
     >
       {/* Map fills the container */}
       <ClimateMap />
-      
+
       {/* Sidebar overlays the map */}
       <MapSidebar />
-      
+
       {/* Legend overlays the map */}
       <Legend />
     </div>
+  );
+}
+
+export default function VisualiserPage() {
+  return (
+    <Suspense>
+      <VisualiserContent />
+    </Suspense>
   );
 }

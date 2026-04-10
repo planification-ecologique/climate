@@ -1,4 +1,4 @@
-import { WMSLayerConfig, WMTSLayerConfig } from '@/types/climate';
+import { WMSLayerConfig, WMTSLayerConfig, XYZLayerConfig } from '@/types/climate';
 
 // Available WMS layers for climate projections and related data
 // Focus on future climate scenarios (2050, 2100)
@@ -259,6 +259,78 @@ export const GEOLOGICAL_RISK_LAYERS: WMSLayerConfig[] = [
     opacity: 0.6,
     visible: false,
     category: 'risk',
+  },
+];
+
+// NASA SEDAC — Global 1/8° urban land fraction (SSP), 2000–2100
+// WMS: https://sedac.ciesin.columbia.edu/geoserver/wms
+// Layer names follow the same GeoServer convention as SEDAC population SSP layers
+// (workspace popdynamics, prefix popdynamics-1-8th-…, suffix _urban-land-fraction-proj-ssp{n}-{year}).
+// If a layer does not load, query GetCapabilities on the URL above and adjust the `layers` string.
+export const SEDAC_SSP_URBAN_LAND_LAYERS: WMSLayerConfig[] = [
+  {
+    id: 'sedac-urban-ssp-baseline-2000',
+    name: 'Terres urbaines (réf. 2000, SEDAC 1/8°)',
+    url: 'https://sedac.ciesin.columbia.edu/geoserver/wms',
+    layers:
+      'popdynamics:popdynamics-1-8th-urban-land-extent-projection-base-year-ssp-2000-2100_urban-land-fraction-ssps-byr-2000',
+    version: '1.1.1',
+    format: 'image/png',
+    transparent: true,
+    attribution:
+      '© NASA SEDAC / CIESIN (Global One-Eighth Degree Urban Land Extent, DOI 10.7927/NJ0X-8Y67)',
+    opacity: 0.65,
+    visible: false,
+    category: 'exposure',
+    needsProxy: true,
+  },
+  {
+    id: 'sedac-urban-ssp245-2050',
+    name: 'Projection terres urbaines 2050 (SSP2, SEDAC 1/8°)',
+    url: 'https://sedac.ciesin.columbia.edu/geoserver/wms',
+    layers:
+      'popdynamics:popdynamics-1-8th-urban-land-extent-projection-base-year-ssp-2000-2100_urban-land-fraction-proj-ssp2-2050',
+    version: '1.1.1',
+    format: 'image/png',
+    transparent: true,
+    attribution:
+      '© NASA SEDAC / CIESIN (Global One-Eighth Degree Urban Land Extent, DOI 10.7927/NJ0X-8Y67)',
+    opacity: 0.65,
+    visible: false,
+    category: 'exposure',
+    needsProxy: true,
+  },
+  {
+    id: 'sedac-urban-ssp585-2050',
+    name: 'Projection terres urbaines 2050 (SSP5, SEDAC 1/8°)',
+    url: 'https://sedac.ciesin.columbia.edu/geoserver/wms',
+    layers:
+      'popdynamics:popdynamics-1-8th-urban-land-extent-projection-base-year-ssp-2000-2100_urban-land-fraction-proj-ssp5-2050',
+    version: '1.1.1',
+    format: 'image/png',
+    transparent: true,
+    attribution:
+      '© NASA SEDAC / CIESIN (Global One-Eighth Degree Urban Land Extent, DOI 10.7927/NJ0X-8Y67)',
+    opacity: 0.65,
+    visible: false,
+    category: 'exposure',
+    needsProxy: true,
+  },
+  {
+    id: 'sedac-urban-ssp585-2100',
+    name: 'Projection terres urbaines 2100 (SSP5, SEDAC 1/8°)',
+    url: 'https://sedac.ciesin.columbia.edu/geoserver/wms',
+    layers:
+      'popdynamics:popdynamics-1-8th-urban-land-extent-projection-base-year-ssp-2000-2100_urban-land-fraction-proj-ssp5-2100',
+    version: '1.1.1',
+    format: 'image/png',
+    transparent: true,
+    attribution:
+      '© NASA SEDAC / CIESIN (Global One-Eighth Degree Urban Land Extent, DOI 10.7927/NJ0X-8Y67)',
+    opacity: 0.65,
+    visible: false,
+    category: 'exposure',
+    needsProxy: true,
   },
 ];
 
@@ -531,6 +603,82 @@ export const OCS_GE_WMTS_LAYERS: WMTSLayerConfig[] = [
   },
 ];
 
+// FuturePop (WorldPop) — local GeoTIFF tiles served by /api/tiles
+// Source GeoTIFFs (WGS84) are stored in repo root under data/FuturePop_SSP2_1km_v0_2/
+// We serve France-focused PNG tiles (WebMercator) via a small API route.
+const FUTUREPOP_ATTRIBUTION = '© WorldPop (FuturePop SSPs 1km v0.2, DOI 10.5258/SOTON/WP00849)';
+
+export const FUTUREPOP_XYZ_LAYERS: XYZLayerConfig[] = [
+  // Absolute population layers
+  {
+    id: 'futurepop-ssp2-2050',
+    name: 'Population SSP2 (2050)',
+    tiles: ['/api/tiles/futurepop-ssp2-2050/{z}/{x}/{y}'],
+    attribution: FUTUREPOP_ATTRIBUTION,
+    opacity: 0.7,
+    visible: false,
+    category: 'population',
+    minZoom: 4,
+    maxZoom: 12,
+  },
+  {
+    id: 'futurepop-ssp2-2100',
+    name: 'Population SSP2 (2100)',
+    tiles: ['/api/tiles/futurepop-ssp2-2100/{z}/{x}/{y}'],
+    attribution: FUTUREPOP_ATTRIBUTION,
+    opacity: 0.7,
+    visible: false,
+    category: 'population',
+    minZoom: 4,
+    maxZoom: 12,
+  },
+  {
+    id: 'futurepop-ssp4-2050',
+    name: 'Population SSP4 (2050)',
+    tiles: ['/api/tiles/futurepop-ssp4-2050/{z}/{x}/{y}'],
+    attribution: FUTUREPOP_ATTRIBUTION,
+    opacity: 0.7,
+    visible: false,
+    category: 'population',
+    minZoom: 4,
+    maxZoom: 12,
+  },
+  {
+    id: 'futurepop-ssp4-2100',
+    name: 'Population SSP4 (2100)',
+    tiles: ['/api/tiles/futurepop-ssp4-2100/{z}/{x}/{y}'],
+    attribution: FUTUREPOP_ATTRIBUTION,
+    opacity: 0.7,
+    visible: false,
+    category: 'population',
+    minZoom: 4,
+    maxZoom: 12,
+  },
+  // Diff layers (2050 - 2025)
+  {
+    id: 'futurepop-ssp2-diff-2050',
+    name: 'Variation pop. SSP2 (2050 vs 2025)',
+    tiles: ['/api/tiles/futurepop-ssp2-diff-2050/{z}/{x}/{y}'],
+    attribution: FUTUREPOP_ATTRIBUTION,
+    opacity: 0.7,
+    visible: false,
+    category: 'population',
+    minZoom: 4,
+    maxZoom: 12,
+  },
+  {
+    id: 'futurepop-ssp4-diff-2050',
+    name: 'Variation pop. SSP4 (2050 vs 2025)',
+    tiles: ['/api/tiles/futurepop-ssp4-diff-2050/{z}/{x}/{y}'],
+    attribution: FUTUREPOP_ATTRIBUTION,
+    opacity: 0.7,
+    visible: false,
+    category: 'population',
+    minZoom: 4,
+    maxZoom: 12,
+  },
+];
+
 // Get all layers combined
 export function getAllLayers(): WMSLayerConfig[] {
   return [
@@ -541,6 +689,7 @@ export function getAllLayers(): WMSLayerConfig[] {
     ...PROTECTED_AREAS_LAYERS,
     ...LAND_COVER_LAYERS,
     ...GEOLOGICAL_RISK_LAYERS,
+    ...SEDAC_SSP_URBAN_LAND_LAYERS,
   ];
 }
 
@@ -560,6 +709,15 @@ export function getAllWMTSLayers(): WMTSLayerConfig[] {
 // Get WMTS layer by ID
 export function getWMTSLayerById(id: string): WMTSLayerConfig | undefined {
   return getAllWMTSLayers().find(layer => layer.id === id);
+}
+
+// Get all XYZ raster tile layers
+export function getAllXYZLayers(): XYZLayerConfig[] {
+  return [...FUTUREPOP_XYZ_LAYERS];
+}
+
+export function getXYZLayerById(id: string): XYZLayerConfig | undefined {
+  return getAllXYZLayers().find(layer => layer.id === id);
 }
 
 // Data sources for climate projections (for future integration)

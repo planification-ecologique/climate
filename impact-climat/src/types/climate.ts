@@ -76,7 +76,7 @@ export interface WMSLayerConfig {
   attribution: string;
   opacity?: number;
   visible?: boolean;
-  category: 'climate' | 'risk' | 'reference' | 'environment' | 'exposure';
+  category: 'climate' | 'risk' | 'reference' | 'environment' | 'exposure' | 'population';
   // Additional WMS parameters for THREDDS/CMIP6 servers
   styles?: string;
   colorScaleRange?: [number, number];
@@ -106,7 +106,20 @@ export interface WMTSLayerConfig {
   attribution: string;
   opacity?: number;
   visible?: boolean;
-  category: 'climate' | 'risk' | 'reference' | 'environment' | 'exposure';
+  category: 'climate' | 'risk' | 'reference' | 'environment' | 'exposure' | 'population';
   minZoom?: number; // Minimum zoom level
   maxZoom?: number; // Maximum zoom level
+}
+
+// XYZ Raster tiles configuration (e.g., self-hosted tiles)
+export interface XYZLayerConfig {
+  id: string;
+  name: string;
+  tiles: string[]; // Tile URL templates: https://.../{z}/{x}/{y}.png
+  attribution: string;
+  opacity?: number;
+  visible?: boolean;
+  category: 'climate' | 'risk' | 'reference' | 'environment' | 'exposure' | 'population';
+  minZoom?: number;
+  maxZoom?: number;
 }

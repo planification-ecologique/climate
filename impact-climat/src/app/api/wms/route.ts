@@ -11,7 +11,10 @@ const ALLOWED_WMS_HOSTS = [
   'geoservices.brgm.fr',
   'services.sandre.eaufrance.fr',
   'ws.carmencarto.fr',
+  'sedac.ciesin.columbia.edu',
 ];
+
+const DEFAULT_FETCH_TIMEOUT_MS = 30_000;
 
 /**
  * Convert EPSG:3857 (Web Mercator) coordinates to EPSG:4326 (WGS84)
@@ -53,6 +56,8 @@ export async function GET(request: NextRequest) {
   const baseUrl = searchParams.get('baseUrl');
   const bbox = searchParams.get('bbox');
   const reproject = searchParams.get('reproject') === 'true';
+  const timeoutMsRaw = searchParams.get('timeoutMs');
+  const timeoutMs = timeoutMsRaw ? Math.min(Math.max(parseInt(timeoutMsRaw, 10) || DEFAULT_FETCH_TIMEOUT_MS, 5_000), 120_000) : DEFAULT_FETCH_TIMEOUT_MS;
 
   if (!baseUrl) {
     return NextResponse.json(
@@ -92,6 +97,8 @@ export async function GET(request: NextRequest) {
     
     // Fetch from the WMS server
     const response = await fetch(fullUrl, {
+      // SEDAC/GeoServer can be slow to accept connections; give it more time than undici defaults.
+      signal: AbortSignal.timeout(timeoutMs),
       headers: {
         'Accept': 'image/png,image/*,*/*',
         'User-Agent': 'Impact-Climat/1.0',
@@ -117,6 +124,13 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('WMS proxy error:', error);
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes('Timeout') || message.includes('timed out') || message.includes('UND_ERR_CONNECT_TIMEOUT') || message.includes('AbortError')) {
+      return NextResponse.json(
+        { error: 'WMS upstream timed out' },
+        { status: 504 }
+      );
+    }
     return NextResponse.json(
       { error: 'Failed to fetch WMS tile' },
       { status: 500 }

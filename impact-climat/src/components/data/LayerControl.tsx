@@ -1,26 +1,34 @@
 "use client";
 
 import { useClimateStore, PERCENTILE_OPTIONS } from "@/stores/useClimateStore";
-import { getAllLayers, getAllWMTSLayers } from "@/lib/climate/layers";
+import { getAllLayers, getAllWMTSLayers, getAllXYZLayers } from "@/lib/climate/layers";
 import { Accordion } from "@codegouvfr/react-dsfr/Accordion";
 import { Checkbox } from "@codegouvfr/react-dsfr/Checkbox";
 import { SegmentedControl } from "@codegouvfr/react-dsfr/SegmentedControl";
-import { WMSLayerConfig, WMTSLayerConfig } from "@/types/climate";
+import { WMSLayerConfig, WMTSLayerConfig, XYZLayerConfig } from "@/types/climate";
 
 export function LayerControl() {
   const { activeLayers, toggleLayer, layerOpacity, setLayerOpacity, percentile, setPercentile } = useClimateStore();
 
   const allLayers = getAllLayers();
   const allWMTSLayers = getAllWMTSLayers();
+  const allXYZLayers = getAllXYZLayers();
   
   const climateLayers = allLayers.filter(l => l.category === 'climate');
   const riskLayers = allLayers.filter(l => l.category === 'risk');
   const referenceLayers = allLayers.filter(l => l.category === 'reference');
   const environmentLayers = allLayers.filter(l => l.category === 'environment');
   const exposureLayers = allLayers.filter(l => l.category === 'exposure');
-  
+  const sedacUrbanLayers = exposureLayers.filter((l) => l.id.startsWith('sedac-urban'));
+  const localExposureWmsLayers = exposureLayers.filter((l) => !l.id.startsWith('sedac-urban'));
+
   // WMTS layers by category
   const wmtsExposureLayers = allWMTSLayers.filter(l => l.category === 'exposure');
+
+  // Population layers (FuturePop)
+  const xyzPopulationLayers = allXYZLayers.filter(l => l.category === 'population');
+  const populationAbsoluteLayers = xyzPopulationLayers.filter(l => !l.id.includes('-diff-'));
+  const populationDiffLayers = xyzPopulationLayers.filter(l => l.id.includes('-diff-'));
 
   // Group climate layers by type
   const temperatureLayers = climateLayers.filter(l => l.id.includes('cmip6-tas'));
@@ -35,7 +43,7 @@ export function LayerControl() {
   const floodLayers = riskLayers.filter(l => l.id.includes('flood'));
   const geologicalLayers = riskLayers.filter(l => l.id.includes('rga') || l.id.includes('cavite'));
 
-  const renderLayerItem = (layer: WMSLayerConfig | WMTSLayerConfig) => (
+  const renderLayerItem = (layer: WMSLayerConfig | WMTSLayerConfig | XYZLayerConfig) => (
     <div key={layer.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 0" }}>
       <Checkbox
         options={[
@@ -214,6 +222,34 @@ export function LayerControl() {
         )}
       </Accordion>
 
+      {/* Population projections (FuturePop) */}
+      <Accordion
+        label={`👥 Population (${xyzPopulationLayers.length})`}
+        defaultExpanded={false}
+      >
+        <p style={{ fontSize: "10px", color: "#666", marginBottom: "8px", padding: "6px", background: "#e0f2fe", borderRadius: "4px" }}>
+          Projections de population (WorldPop FuturePop, 1 km)
+        </p>
+        {populationAbsoluteLayers.length > 0 && (
+          <>
+            <p style={{ fontSize: "10px", fontWeight: 600, color: "#1e40af", marginBottom: "4px" }}>Densité absolue</p>
+            {populationAbsoluteLayers.map(renderLayerItem)}
+          </>
+        )}
+        {populationDiffLayers.length > 0 && (
+          <>
+            <p style={{ fontSize: "10px", fontWeight: 600, color: "#1e40af", marginTop: "8px", marginBottom: "4px" }}>Variation (2050 vs 2025)</p>
+            <p style={{ fontSize: "9px", color: "#6b7280", marginBottom: "8px", padding: "4px 6px", background: "#f3f4f6", borderRadius: "4px" }}>
+              Bleu = baisse · Blanc = stable · Rouge = hausse
+            </p>
+            {populationDiffLayers.map(renderLayerItem)}
+          </>
+        )}
+        {xyzPopulationLayers.length === 0 && (
+          <p style={{ fontSize: "12px", color: "#666" }}>Aucune couche disponible</p>
+        )}
+      </Accordion>
+
       {/* Land use and exposure */}
       <Accordion
         label={`🏘️ Occupation du sol (${exposureLayers.length + wmtsExposureLayers.length})`}
@@ -231,20 +267,33 @@ export function LayerControl() {
             {wmtsExposureLayers.map(renderLayerItem)}
           </>
         )}
-        
+
+        {/* SEDAC global SSP urban land (WMS via proxy); map defaults to France — zoom ~6+ to see 1/8° cells */}
+        {sedacUrbanLayers.length > 0 && (
+          <>
+            <p style={{ fontSize: "10px", color: "#666", marginTop: "12px", marginBottom: "8px", padding: "6px", background: "#ede9fe", borderRadius: "4px" }}>
+              🌍 Terres urbaines projetées (SEDAC · grilles SSP, résol. 1/8°)
+            </p>
+            <p style={{ fontSize: "9px", color: "#5b21b6", marginBottom: "8px", padding: "4px 6px", background: "#f5f3ff", borderRadius: "4px" }}>
+              Couche mondiale — centrée sur la France dans l&apos;app · zoomer pour distinguer les mailles (~7,5 min d&apos;arc).
+            </p>
+            {sedacUrbanLayers.map(renderLayerItem)}
+          </>
+        )}
+
         {/* RPG Agriculture - rate-limited WMS */}
-        {exposureLayers.length > 0 && (
+        {localExposureWmsLayers.length > 0 && (
           <>
             <p style={{ fontSize: "10px", color: "#666", marginTop: "12px", marginBottom: "8px", padding: "6px", background: "#fef3c7", borderRadius: "4px" }}>
-              🌾 Parcelles agricoles (IGN RPG)
+              🌾 Parcelles agricoles (IGN RPG, BD Forêt)
             </p>
             <p style={{ fontSize: "9px", color: "#b45309", marginBottom: "8px", padding: "4px 6px", background: "#fef9c3", borderRadius: "4px" }}>
               🐢 Chargement lent - le serveur IGN limite les requêtes
             </p>
-            {exposureLayers.map(renderLayerItem)}
+            {localExposureWmsLayers.map(renderLayerItem)}
           </>
         )}
-        
+
         {exposureLayers.length === 0 && wmtsExposureLayers.length === 0 && (
           <p style={{ fontSize: "12px", color: "#666" }}>Aucune couche disponible</p>
         )}
@@ -323,7 +372,7 @@ export function LayerControl() {
         borderRadius: "4px",
         borderLeft: "3px solid #22c55e"
       }}>
-        <strong>Sources:</strong> World Bank CCKP (CMIP6), BRGM, Géorisques, IGN, INPN/MNHN, Sandre
+        <strong>Sources:</strong> World Bank CCKP (CMIP6), NASA SEDAC, BRGM, Géorisques, IGN, INPN/MNHN, Sandre
       </div>
     </div>
   );
